@@ -1,10 +1,15 @@
+breed [nodes node]
 turtles-own [energy]
 
 to setup
-  clear-all
-  setup-patches
-  setup-turtles
+  no-display clear-all
+;  setup-patches
+;  setup-turtles
+  set-default-shape nodes "circle"
+;  draw-grid
+  distribute-nodes
   reset-ticks
+  display
 end
 
 
@@ -19,18 +24,20 @@ to setup-turtles
     set size 1
     set color red
     setxy random-xcor random-ycor
-    set energy 10
+    set energy initial-energy
   ]
 end
 
 
 to go
   if not any? patches with [pcolor = green] [stop]
+  if not any? turtles [stop]
+  if not run-infinite? [if ticks >= run-length [stop]]
   move-turtles
   eat-grass
   reproduce
   check-death
-  ;regrow-grass
+  if regrow? [regrow-grass]
   tick
 end
 
@@ -61,10 +68,10 @@ end
 to reproduce
   ask turtles
   [
-    if energy > 50
+    if energy > reproduce-energy
     [
-      set energy energy - 10
-      hatch 1 [ set energy 10 ]
+      set energy energy - initial-energy
+      hatch 1 [ set energy initial-energy ]
     ]
   ]
 end
@@ -79,18 +86,69 @@ end
 to regrow-grass
   ask patches
   [
-    if random 100 < 3 [ set pcolor green ]
+    if random 100 < grass-growth [ set pcolor green ]
   ]
+end
+
+to distribute-nodes
+  ask patches
+  [
+    set pcolor 6.7
+    sprout-nodes 1 [set size 0.8 set color white]
+  ]
+;  ask nodes [ die ]
+;  ask patches with [random-float 1 < 0.5]
+;  [
+;    sprout-nodes 1
+;    [
+;      set color orange
+;    ]
+;  ]
+end
+
+to draw-grid
+  clear-drawing
+  ask patches [
+    sprout 1 [
+      set shape "square"
+      set color blue + 4
+      stamp
+      die
+    ]
+  ]
+end
+
+to transmit-info
+  let north patch-at 0 1
+  let east patch-at 1 0
+  let south patch-at 0 -1
+  let west patch-at -1 0
+  ask patches
+  [
+
+  ]
+end
+
+to-report state
+  let north patch-at 0 1
+  let east patch-at 1 0
+  let south patch-at 0 -1
+  let west patch-at -1 0
+  report ifelse-value (is-patch? north) [ifelse-value (any? nodes-on north) [81] [0]] [162] +
+         ifelse-value (is-patch? east ) [ifelse-value (any? nodes-on east ) [27] [0]] [ 54] +
+         ifelse-value (is-patch? south) [ifelse-value (any? nodes-on south) [ 9] [0]] [ 18] +
+         ifelse-value (is-patch? west ) [ifelse-value (any? nodes-on west ) [ 3] [0]] [  6] +
+                                         ifelse-value (any? nodes-here)     [ 1] [0]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-319
-26
-756
-464
+313
+10
+754
+452
 -1
 -1
-13.0
+43.3
 1
 10
 1
@@ -100,15 +158,15 @@ GRAPHICS-WINDOW
 1
 1
 1
--16
-16
--16
-16
+0
+9
+0
+9
 1
 1
 1
 ticks
-30.0
+90.0
 
 BUTTON
 44
@@ -153,7 +211,7 @@ population
 population
 0
 100
-50.0
+1.0
 1
 1
 NIL
@@ -189,6 +247,95 @@ SWITCH
 show-energy?
 show-energy?
 0
+1
+-1000
+
+SWITCH
+45
+512
+203
+545
+regrow?
+regrow?
+0
+1
+-1000
+
+PLOT
+919
+48
+1326
+198
+Totals
+time
+totals
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"turtles" 1.0 0 -2674135 true "" "plot count turtles"
+"grass" 1.0 0 -10899396 true "" "plot count patches with [pcolor = green]"
+
+INPUTBOX
+44
+583
+353
+643
+reproduce-energy
+50.0
+1
+0
+Number
+
+INPUTBOX
+919
+298
+1080
+358
+run-length
+200.0
+1
+0
+Number
+
+INPUTBOX
+417
+595
+578
+655
+initial-energy
+10.0
+1
+0
+Number
+
+SLIDER
+648
+605
+1219
+638
+grass-growth
+grass-growth
+0
+9
+1.0
+1
+1
+NIL
+HORIZONTAL
+
+SWITCH
+919
+242
+1060
+275
+run-infinite?
+run-infinite?
+1
 1
 -1000
 
